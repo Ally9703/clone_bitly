@@ -1,3 +1,51 @@
+<!DOCTYPE html>
+<?php
+
+	// Redirger notre utilisateur
+	if(!empty($_GET['q'])){
+		
+	}
+
+
+
+	if(!empty($_POST['url'])){
+
+		// Variables
+		$url = htmlspecialchars($_POST['url']);
+
+	
+		// Vérification du format de l'url
+		if(!filter_var($url, FILTER_VALIDATE_URL)){
+			header('location: ./?error=true&message=Adresse url non valide');
+			exit();
+		}
+
+		// Création du raccourci
+		$shortcut = crypt($url, rand());
+		// echo $shortcut;
+
+		// Vérification d'un doublons
+		$bdd = new PDO('mysql:host=localhost;dbname=bitly;charset=utf8', 'root', '');
+		$req = $bdd->prepare('SELECT COUNT(*) AS nombre FROM links WHERE url= ?');
+		$req->execute([$url]);
+
+		while($resultat = $req->fetch()){
+			if($resultat['nombre'] != 0){
+				header('location: ./?error=true&message=Adresse déjà raccourcie');
+				exit();
+			}	
+		}
+		
+		// Ajout du raccourci
+		$ajout = $bdd->prepare('INSERT INTO links(url, shortcut) VALUES (?, ?)');
+		$ajout->execute([$url, $shortcut]);
+
+		header("location: ./?short=$shortcut");
+		exit();	
+	}
+
+
+?>
 <html>
     <head>
         <meta charset="utf-8">
